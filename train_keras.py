@@ -3,7 +3,7 @@ import os
 import numpy as np
 import tensorflow
 #import matplotlib.pyplot as plt
-print(len(tensorflow.config.list_physical_devics('GPU')))
+#print(len(tensorflow.config.list_physical_devics('GPU')))
 with tensorflow.device('/GPU:0'):
 
 

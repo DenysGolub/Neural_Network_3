@@ -41,6 +41,8 @@
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 # X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.2)
 
+
+
 import numpy as np
 
 from layer import Layer
@@ -76,56 +78,60 @@ for category in classes:
 
 from neural_network import NeuralNetwork
 
-data=[
-        [1.5, 0.3, 0.1, 4, 1],
-        [2, 7, 4, 1, 2],
-        [3.1, 0.9, 0.4, 34, 3],
-        [3, 1, 6, 1, 4]
-      
-      ]
+data = np.array([
+    [1.0, 1.0],
+    [9.4, 6.4],
+    [2.5, 2.1],
+    [8.0, 7.7],
+    [0.5, 2.2],
+    [7.9, 8.4],
+    [7.0, 7.0],
+    [2.8, 0.8],
+    [1.2, 3.0],
+    [7.8, 6.1]
+])
 
-data = [[1.5, 0.3, 0.1, 4, 1]]
+y = np.array([1, 0, 1, 0, 1, 0, 0, 1, 1, 0])  # Target labels
 
-y=[1] 
-#[X[0].reshape(1, 256*256)]
-print(input)
-layers = [5,3,3,1] #hidden layers (input, [hiddens], output)
-
-nn = NeuralNetwork()
+layers = [2, 25, 10, 1]  # Hidden layers (input, [hidden], output)
+activations = ["relu", "tanh", "tanh", "tanh", "sigmoid"]
+nn = NeuralNetwork(layers, activations)
 nn.learning_rate = 0.1
 print(len(data[0]))
 
-for i in range(0, len(layers)):
-    if(i+1 >= len(layers)):
-        break
-    #print(f"Layer: input {layers[i]}| output {layers[i+1]}")
-    
-    if(i==len(layers)-1):
-        nn.add_layer(Layer(layers[i], layers[i+1], 'sigmoid'))
-    else: 
-        nn.add_layer(Layer(layers[i], layers[i+1], 'relu'))  
 
-# print(nn.layers[0].neurons)
-# print(nn.layers[1].neurons)
-# print(nn.layers[2].neurons)
+max_epoch = 10000
+has_error = True
+epoch = 0
+import math
+nn.print_weights()
 
-# print('Layers added')
-hasError = True
-while(hasError):
-    for i, feature in enumerate(data):
-        nn.inputs = feature
-        nn.forward()
 
-        predicted = 1 / (1 + np.exp(-np.float32(nn.outputs[-1])))
-        #print("Predicted:", predicted)
+while has_error and epoch < max_epoch:
+    total_loss = 0
+    has_error = False
 
+    for i in range(len(data)):
+        nn.feed_forward(data[i])
+
+        network_output = nn.layers[-1].outputs[0]
+        predicted = 1.0 / (1.0 + math.exp(-network_output))
         predicted_class = 1 if predicted >= 0.5 else 0
 
-        if predicted_class == y:
-            hasError = False
-        else:
-            nn.backward(y)  
-            hasError = True
+        total_loss += (predicted - y[i]) ** 2
+
+        if predicted_class != y[i]:
+            nn.backprop([y[i]])
+            has_error = True
+
+    # Calculate average loss if desired
+    average_loss = total_loss / len(data)
+
+    if epoch % 1 == 0:
+        print(f"Epoch {epoch}")
+        print(f"Total Loss for Epoch {epoch}: {average_loss}")
+    epoch += 1
 
 
+nn.print_weights()
 
