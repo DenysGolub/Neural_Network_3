@@ -1,47 +1,50 @@
-from layer import Layer
-class NeuralNetwork:
-    def __init__(self, layer, activations):
-        self.layer = list(layer)
-        self.layers = [Layer(layer[i], layer[i + 1], activations[i]) for i in range(len(layer) - 1)]
-        self.learning_rate = None
-
-    @property
-    def learning_rate(self):
-        return self._learning_rate
-
-    @learning_rate.setter
-    def learning_rate(self, value):
-        self._learning_rate = value
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from loss_functions import LossFunctions
+class NeuralNetwork():
+    def __init__(self):
+        self.layers = []
+        self.classes = []
+        self.confusion_matrix = None
+    
+    def add_layer(self, layer):
+        self.layers.append(layer)
         
-        for l in self.layers:
-            l.learning_rate = value
-        
+    def set_classes(self, classes):
+        self.classes = classes
+            
+    def train(self, X_train, y_train, epochs=20, learning_rate=0.01):
+        for epoch in range(epochs):
+            error = 0
+            for x, y_true in zip(X_train, y_train):
+                output = x
+                for layer in self.layers:
+                    layer.learning_rate = learning_rate
+                    output = layer.forward(output)
+                
+                error += LossFunctions.cross_entropy(y_true, output)
+
+                output_error = LossFunctions.cross_entropy_loss_gradient(y_true, output)
+                for layer in reversed(self.layers):
+                    output_error = layer.backward(output_error)
+            
+            error /= len(X_train)
+            print('%d/%d, error=%f' % (epoch + 1, epochs, error))
 
     def predict(self, input):
-        self.feed_forward(input)
-        return self.layers[-1].outputs
+            output = input
+            for layer in self.layers:
+                output = layer.forward(output)
+                
+            return output            
 
-    def feed_forward(self, input):
-        self.layers[0].feedforward(input)
-        for i in range(1, len(self.layers)):
-            self.layers[i].feedforward(self.layers[i - 1].outputs)
-
-        return self.layers[-1].outputs
-
-    def backprop(self, expected):
-        for i in range(len(self.layers) - 1, -1, -1):
-            if i == len(self.layers) - 1:
-                self.layers[i].back_prop_output(expected)
-            else:
-                self.layers[i].backprop_hidden(self.layers[i + 1].gamma, self.layers[i + 1].weights)
-
-        for layer in self.layers:
-            layer.update_weights()
-
-
-    def print_weights(self):
-        for l in self.layers:
-            print('-'*50)
-            print(l.weights)
-            print('-'*50)
-            
+    
+    def get_plot_confusion_matrix(self):
+        fig = plt.figure(figsize=(10, 7))
+        sns.heatmap(self.confusion_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=self.classes, yticklabels=self.classes)
+        plt.title('Матриця плутанини')
+        plt.xlabel('Передбачені класи')
+        plt.ylabel('Реальні класи')
+        
+        return fig
