@@ -1,0 +1,1 @@
+This repository contains a neural network that was written from scratch for my course of neural networks in university. Fistly I wanted to create classifier for art styles and architecture, but in the end I decided to go with brain tumor
